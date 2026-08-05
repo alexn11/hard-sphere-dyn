@@ -205,7 +205,7 @@ if(do_tests):
 
 
 # simulate hard sphere dynamics & display on a plot
-n = 20
+n = 40
 v0 = Maxwellian2D(k_Boltzmann, 1).sample(n)
 x0 = rng.random(size=[n, 2])
 z0 = np.stack([x0, v0], axis=2)
@@ -222,7 +222,6 @@ def plot_update(frame):
     dyn.time_step()
     scatter_plot.set_offsets(list(zip(dyn.x[:,0], dyn.x[:,1])))
 
-
 animation = FuncAnimation(fig, plot_update, frames = None)
 pyplot.show()
 
@@ -231,8 +230,10 @@ pyplot.show()
 collision_times = np.array([c[-1] for c in dyn.collisions])
 collision_counts = np.arange(len(collision_times)) + 1
 pyplot.plot(collision_times, collision_counts)
+pyplot.title('number of collisions')
+pyplot.xlabel('time')
+pyplot.ylabel('collisions')
 pyplot.show()
-
 
 # create a graph of the collisions
 
