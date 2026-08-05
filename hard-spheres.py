@@ -56,25 +56,11 @@ class CollisionFinder:
                                         self.collision_times,
                                         self.invalid_collision_time)
     def get_next_collision(self) -> None | tuple[tuple[int, int], float]:
-        #print(f'collision_times: {self.collision_times.shape}, argmin={np.argmin(self.collision_times)}')
         i_1st_collision, j_1st_collision = np.unravel_index(np.argmin(self.collision_times), self.collision_times.shape)
         t_1st_collision = self.collision_times[i_1st_collision, j_1st_collision]
         if(t_1st_collision > self.t):
             return None
         return (i_1st_collision, j_1st_collision), t_1st_collision
-    def solve_for_collision(self): # note: not to be used
-        i, j = self._i1, self._i2
-        a = self.dv2[i, j]
-        b = self.dxdv[i, j]
-        c = self.dx2[i, j] - self.d2
-        delta = b*b - a*c
-        if(delta < 0):
-            return None
-        t_c = (-b - delta**0.5) / a
-        if((t_c < 0) or (t_c > self.t)):
-            return None
-        return t_c
-
 
 class HardSphereDynamics:
     def __init__(self, sphere_r, base_dt, z0, box_size=0.):
@@ -99,7 +85,6 @@ class HardSphereDynamics:
         self.t += self.dt
     def prepare_step(self):
         self.dt = self.base_dt
-        #self.max_v = self.v.max(0) # i never know so probably axe isnt correct
         if(self.box_size > 0.):
             self.x = np.fmod(self.x, self.box_size)
     def find_next_collision(self):
