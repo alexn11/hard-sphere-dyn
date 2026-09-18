@@ -70,8 +70,8 @@ class HardSphereDynamics:
         self.d = 2. * self.r
         self.d2 = self.d**2
         self.base_dt = base_dt
-        self.x0: np.ndarray = z0[:,0,:]
-        self.v0: np.ndarray = z0[:,1,:]
+        self.x0: np.ndarray = z0[:,:,0]
+        self.v0: np.ndarray = z0[:,:,1]
         self.box_size = box_size
         self.prepare_simulation()
         self.collision_finder = None
@@ -184,24 +184,24 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--T', type=float, default=300., help='temperature (K)')
     arg_parser.add_argument('--m', type=float, default=32., help='molar mass (g/mol)')
-    arg_parser.add_argument('--sphere-r', type=float, default=1.0, help='sphere radius (abitrary unit)')
+    arg_parser.add_argument('--sphere-r', type=float, default=.5, help='sphere radius (abitrary unit)')
     arg_parser.add_argument('--n', type=int, default=40, help='number of spheres')
-    arg_parser.add_argument('--box-size', type=float, default=2.0, help='size of the box (abitrary unit) - 0 means no bounding box')
+    arg_parser.add_argument('--box-size', type=float, default=20.0, help='size of the box (abitrary unit) - 0 means no bounding box')
     arg_parser.add_argument('--base-dt', type=float, default=0.1, help='time step size when no collision occur (abitrary unit)')
     arg_parser.add_argument('--dot-file', type=str, default='sample.dot', help='file path to save the collision graph data')
     arg_parser.add_argument('--svg-file', type=str, default='sample.svg', help='file path to save a picture of the collision graph')
     arg_parser.add_argument('--test', action='store_true', help='run tests')
     parsed_args = arg_parser.parse_args()
 
-    T = parsed_args.T
-    m = parsed_args.m / (1000. * N_avogadro)
-    sphere_r = parsed_args.sphere_r
-    n = parsed_args.n
-    box_size = parsed_args.box_size
-    base_dt = parsed_args.base_dt
-    output_dot_file = parsed_args.dot_file
-    output_svg_file = parsed_args.svg_file
-    do_tests = parsed_args.test
+    T: float = parsed_args.T
+    m: float = parsed_args.m / (1000. * N_avogadro)
+    sphere_r: float = parsed_args.sphere_r
+    n: int = parsed_args.n
+    box_size: float = parsed_args.box_size
+    base_dt: float = parsed_args.base_dt
+    output_dot_file: str = parsed_args.dot_file
+    output_svg_file: str = parsed_args.svg_file
+    do_tests: bool = parsed_args.test
 
     # tests
     if(do_tests):
@@ -235,15 +235,18 @@ if __name__ == '__main__':
 
     # simulate hard sphere dynamics & display on a plot
     v0 = Maxwellian2D(k_Boltzmann, 1).sample(n)
-    x0 = rng.random(size=[n, 2])
+    x0 = box_size * rng.random(size=[n, 2])
     z0 = np.stack([x0, v0], axis=2)
 
-    dyn = HardSphereDynamics(sphere_r=1, base_dt=0.1, z0=z0, box_size=2.0)
+    dyn = HardSphereDynamics(sphere_r=1, base_dt=0.1, z0=z0, box_size=box_size)
 
     fig, ax = pyplot.subplots()
-    ax.set_xlim(left=0., right=2.0)
-    ax.set_ylim(bottom=0., top=2.0)
+    ax.set_xlim(left=0., right=box_size)
+    ax.set_ylim(bottom=0., top=box_size)
     scatter_plot = ax.scatter(dyn.x[:,0], dyn.x[:,1])
+
+    #def draw_circle_scatter(...)
+
 
     def plot_update(frame):
         global scatter_plot
