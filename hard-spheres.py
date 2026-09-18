@@ -179,6 +179,14 @@ def generate_dot_file(edges: list[tuple[str, str]], oriented=False):
     dot_content += '\n}\n'
     return dot_content
 
+def compute_marker_size(fig: pyplot.Figure, ax: pyplot.Axes, marker_real_size: float):
+    b = ax.transData._b.get_matrix()
+    print(f'b={b[:2,:2]}')
+    pixels_per_unit_x = b[0,0]
+    pixels_per_unit_y = b[1,1]
+    marker_size = 13.5 * (fig.dpi**2) * (marker_real_size**2) / (pixels_per_unit_x * pixels_per_unit_y)
+    print(f's={marker_size}')
+    return marker_size
 
 
 if __name__ == '__main__':
@@ -243,12 +251,25 @@ if __name__ == '__main__':
 
     dyn = HardSphereDynamics(sphere_r=1, base_dt=0.1, z0=z0, box_size=box_size)
 
-    fig, ax = pyplot.subplots()
+    fig, ax = pyplot.subplots(dpi=300)
+    ticks = np.arange(start=0, stop=box_size, step=1.)
     ax.set_xlim(left=0., right=box_size)
     ax.set_ylim(bottom=0., top=box_size)
+    ax.set_xticks(ticks)
+    ax.set_yticks(ticks)
     scatter_plot = ax.scatter(dyn.x[:,0], dyn.x[:,1],
                               edgecolor='k',
                               linewidths=1.)
+    marker_size = compute_marker_size(fig, ax, sphere_r)
+    ax.clear()
+    ax.set_xlim(left=0., right=box_size)
+    ax.set_ylim(bottom=0., top=box_size)
+    ax.set_xticks(ticks)
+    ax.set_yticks(ticks)
+    scatter_plot = ax.scatter(dyn.x[:,0], dyn.x[:,1],
+                              edgecolor='k',
+                              linewidths=1.,
+                              s=marker_size)
 
     def update_scatter(frame,
                        scatter_plot: matplotlib.collections.PathCollection = None,
