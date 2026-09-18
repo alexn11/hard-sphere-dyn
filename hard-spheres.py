@@ -186,7 +186,7 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--T', type=float, default=300., help='temperature (K)')
     arg_parser.add_argument('--m', type=float, default=32., help='molar mass (g/mol)')
-    arg_parser.add_argument('--sphere-r', type=float, default=.2, help='sphere radius (abitrary unit)')
+    arg_parser.add_argument('--sphere-r', type=float, default=.1, help='sphere radius (abitrary unit)')
     arg_parser.add_argument('--n', type=int, default=40, help='number of spheres')
     arg_parser.add_argument('--box-size', type=float, default=20.0, help='size of the box (abitrary unit) - 0 means no bounding box')
     arg_parser.add_argument('--base-dt', type=float, default=0.1, help='time step size when no collision occur (abitrary unit)')
@@ -241,7 +241,7 @@ if __name__ == '__main__':
     x0 = box_size * rng.random(size=[n, 2])
     z0 = np.stack([x0, v0], axis=2)
 
-    dyn = HardSphereDynamics(sphere_r=1, base_dt=0.1, z0=z0, box_size=box_size)
+    dyn = HardSphereDynamics(sphere_r=sphere_r, base_dt=0.1, z0=z0, box_size=box_size)
 
     fig, ax = pyplot.subplots()
     ax.set_xlim(left=0., right=box_size)
