@@ -1,3 +1,10 @@
+
+__author__ = "Alexandre De Zotti"
+__copyright__ = "Copyright (C) 2026 Alexandre De Zotti"
+__license__ = "Public Domain"
+__version__ = "1.0"
+
+import argparse
 import subprocess
 
 import numpy as np
@@ -8,11 +15,6 @@ k_Boltzmann = 1.381e-23
 N_avogadro = 6.022e23
 
 rng = np.random.default_rng()
-
-T = 300
-m = 32 / N_avogadro
-do_tests = False
-
 
 class Maxwellian2D:
     def __init__(self, m, T, rng=None):
@@ -176,74 +178,100 @@ def generate_dot_file(edges: list[tuple[str, str]], oriented=False):
     return dot_content
 
 
-# tests
-if(do_tests):
-    # collision detection
-    cf = CollisionFinder(x=np.array([[-1.,0.], [0.,0.]]),
-                        v=np.array([[1.,0.],[0.,0.]]),
-                        t=2.,
-                        d2=0.01)
-    assert(np.allclose(cf.dx[0,0],[0.,0.]))
-    assert(np.allclose(cf.dx[1,0],[1.,0.]))
-    assert(np.allclose(cf.dx[0,1],[-1.,0.]))
-    assert(np.allclose(cf.dx[1,1],[0.,0.]))
-    assert(np.allclose(cf.dv[0,0],[0.,0.]))
-    assert(np.allclose(cf.dv[1,0],[-1.,0.]))
-    assert(np.allclose(cf.dv[0,1],[1.,0.]))
-    assert(np.allclose(cf.dv[1,1],[0.,0.]))
-    assert(np.allclose(cf.dxdv[0,0], 0.))
-    assert(np.allclose(cf.dxdv[1,0], -1.))
-    assert(np.allclose(cf.dxdv[0,1], -1.))
-    assert(np.allclose(cf.dxdv[1,1], 0.))
-    cf.get_next_collision()
-    # collision data to graph
-    collisions = [[(5, 6), 0.0008667870314063772], [(6, 7), 4.531346070838127], [(1, 3), 7.5919666296061115]]
-    nodes, edges = make_collision_graph(collisions)
-    assert(nodes == ['start_1', 'start_3', 'start_5', 'start_6', 'start_7', 'c_0', 'c_1', 'c_2', 'end_1', 'end_3', 'end_5', 'end_6', 'end_7'])
-    assert(edges == [('start_5', 'c_0'), ('start_6', 'c_0'), ('c_0', 'end_5'), ('c_0', 'c_1'), ('start_7', 'c_1'), ('c_1', 'end_6'), ('c_1', 'end_7'), ('start_1', 'c_2'), ('start_3', 'c_2'), ('c_2', 'end_1'), ('c_2', 'end_3')])
+
+if __name__ == '__main__':
+
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('--T', type=float, default=300., help='temperature (K)')
+    arg_parser.add_argument('--m', type=float, default=32., help='molar mass (g/mol)')
+    arg_parser.add_argument('--sphere_r', type=float, default=1.0, help='sphere radius (abitrary unit)')
+    arg_parser.add_argument('--n', type=int, default=40, help='number of spheres')
+    arg_parser.add_argument('--box-size', type=float, default=2.0, help='size of the box (abitrary unit)')
+    arg_parser.add_argument('--base-dt', type=float, default=0.1, help='time step size when no collision occur (abitrary unit)')
+    arg_parser.add_argument('--dot-file', type=str, default='sample.dot', help='file path to save the collision graph data')
+    arg_parser.add_argument('--svg-file', type=str, default='sample.svg', help='file path to save a picture of the collision graph')
+    arg_parser.add_argument('--test', action='store_true', help='run tests')
+    parsed_args = arg_parser.parse_args()
+
+    T = parsed_args.T
+    m = parsed_args.m / (1000. * N_avogadro)
+    sphere_r = parsed_args.sphere_r
+    n = parsed_args.n
+    box_size = parsed_args.box_size
+    base_dt = parsed_args.base_dt
+    output_dot_file = parsed_args.dot_file
+    output_svg_file = parsed_args.svg_file
+    do_tests = parsed_args.test
+
+    # tests
+    if(do_tests):
+        # collision detection
+        cf = CollisionFinder(x=np.array([[-1.,0.], [0.,0.]]),
+                            v=np.array([[1.,0.],[0.,0.]]),
+                            t=2.,
+                            d2=0.01)
+        assert(np.allclose(cf.dx[0,0],[0.,0.]))
+        assert(np.allclose(cf.dx[1,0],[1.,0.]))
+        assert(np.allclose(cf.dx[0,1],[-1.,0.]))
+        assert(np.allclose(cf.dx[1,1],[0.,0.]))
+        assert(np.allclose(cf.dv[0,0],[0.,0.]))
+        assert(np.allclose(cf.dv[1,0],[-1.,0.]))
+        assert(np.allclose(cf.dv[0,1],[1.,0.]))
+        assert(np.allclose(cf.dv[1,1],[0.,0.]))
+        assert(np.allclose(cf.dxdv[0,0], 0.))
+        assert(np.allclose(cf.dxdv[1,0], -1.))
+        assert(np.allclose(cf.dxdv[0,1], -1.))
+        assert(np.allclose(cf.dxdv[1,1], 0.))
+        cf.get_next_collision()
+        # collision data to graph
+        collisions = [[(5, 6), 0.0008667870314063772], [(6, 7), 4.531346070838127], [(1, 3), 7.5919666296061115]]
+        nodes, edges = make_collision_graph(collisions)
+        assert(nodes == ['start_1', 'start_3', 'start_5', 'start_6', 'start_7', 'c_0', 'c_1', 'c_2', 'end_1', 'end_3', 'end_5', 'end_6', 'end_7'])
+        assert(edges == [('start_5', 'c_0'), ('start_6', 'c_0'), ('c_0', 'end_5'), ('c_0', 'c_1'), ('start_7', 'c_1'), ('c_1', 'end_6'), ('c_1', 'end_7'), ('start_1', 'c_2'), ('start_3', 'c_2'), ('c_2', 'end_1'), ('c_2', 'end_3')])
+        print('all tests passed')
 
 
 
-# simulate hard sphere dynamics & display on a plot
-n = 40
-v0 = Maxwellian2D(k_Boltzmann, 1).sample(n)
-x0 = rng.random(size=[n, 2])
-z0 = np.stack([x0, v0], axis=2)
 
-dyn = HardSphereDynamics(sphere_r=1, base_dt=0.1, z0=z0, box_size=2.0)
+    # simulate hard sphere dynamics & display on a plot
+    v0 = Maxwellian2D(k_Boltzmann, 1).sample(n)
+    x0 = rng.random(size=[n, 2])
+    z0 = np.stack([x0, v0], axis=2)
 
-fig, ax = pyplot.subplots()
-ax.set_xlim(left=0., right=2.0)
-ax.set_ylim(bottom=0., top=2.0)
-scatter_plot = ax.scatter(dyn.x[:,0], dyn.x[:,1])
+    dyn = HardSphereDynamics(sphere_r=1, base_dt=0.1, z0=z0, box_size=2.0)
 
-def plot_update(frame):
-    global scatter_plot
-    dyn.time_step()
-    scatter_plot.set_offsets(list(zip(dyn.x[:,0], dyn.x[:,1])))
+    fig, ax = pyplot.subplots()
+    ax.set_xlim(left=0., right=2.0)
+    ax.set_ylim(bottom=0., top=2.0)
+    scatter_plot = ax.scatter(dyn.x[:,0], dyn.x[:,1])
 
-animation = FuncAnimation(fig, plot_update, frames = None)
-pyplot.show()
+    def plot_update(frame):
+        global scatter_plot
+        dyn.time_step()
+        scatter_plot.set_offsets(list(zip(dyn.x[:,0], dyn.x[:,1])))
 
-# when stopped show the number of collisions with time
+    animation = FuncAnimation(fig, plot_update, frames = None)
+    pyplot.show()
 
-collision_times = np.array([c[-1] for c in dyn.collisions])
-collision_counts = np.arange(len(collision_times)) + 1
-pyplot.plot(collision_times, collision_counts)
-pyplot.title('number of collisions')
-pyplot.xlabel('time')
-pyplot.ylabel('collisions')
-pyplot.show()
+    # when stopped show the number of collisions with time
 
-# create a graph of the collisions
+    collision_times = np.array([c[-1] for c in dyn.collisions])
+    collision_counts = np.arange(len(collision_times)) + 1
+    pyplot.plot(collision_times, collision_counts)
+    pyplot.title('number of collisions')
+    pyplot.xlabel('time')
+    pyplot.ylabel('collisions')
+    pyplot.show()
 
-nodes, edges = make_collision_graph(dyn.collisions)
+    # create a graph of the collisions
 
-dot_content = generate_dot_file(edges)
-print(dot_content)
+    nodes, edges = make_collision_graph(dyn.collisions)
 
-with open('sample.dot', 'w') as dot_file:
-    dot_file.write(dot_content)
+    dot_content = generate_dot_file(edges)
+    print(dot_content)
 
-# dot -Tsvg  sample.dot  > sample.svg
-subprocess.run(['dot', '-Tsvg', 'sample.dot', '-o', 'sample.svg'])
+    with open(output_dot_file, 'w') as dot_file:
+        dot_file.write(dot_content)
+
+    # dot -Tsvg  sample.dot  > sample.svg
+    subprocess.run(['dot', '-Tsvg', output_dot_file, '-o', output_svg_file])
