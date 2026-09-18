@@ -5,9 +5,11 @@ __license__ = "Public Domain"
 __version__ = "1.0"
 
 import argparse
+from functools import partial
 import subprocess
 
 import numpy as np
+import matplotlib
 from matplotlib import pyplot
 from matplotlib.animation import FuncAnimation
 
@@ -184,7 +186,7 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--T', type=float, default=300., help='temperature (K)')
     arg_parser.add_argument('--m', type=float, default=32., help='molar mass (g/mol)')
-    arg_parser.add_argument('--sphere-r', type=float, default=.5, help='sphere radius (abitrary unit)')
+    arg_parser.add_argument('--sphere-r', type=float, default=.2, help='sphere radius (abitrary unit)')
     arg_parser.add_argument('--n', type=int, default=40, help='number of spheres')
     arg_parser.add_argument('--box-size', type=float, default=20.0, help='size of the box (abitrary unit) - 0 means no bounding box')
     arg_parser.add_argument('--base-dt', type=float, default=0.1, help='time step size when no collision occur (abitrary unit)')
@@ -233,7 +235,8 @@ if __name__ == '__main__':
 
 
 
-    # simulate hard sphere dynamics & display on a plot
+    # simulate hard sphere dynamics & display on a plot as it runs
+
     v0 = Maxwellian2D(k_Boltzmann, 1).sample(n)
     x0 = box_size * rng.random(size=[n, 2])
     z0 = np.stack([x0, v0], axis=2)
@@ -243,20 +246,20 @@ if __name__ == '__main__':
     fig, ax = pyplot.subplots()
     ax.set_xlim(left=0., right=box_size)
     ax.set_ylim(bottom=0., top=box_size)
-    scatter_plot = ax.scatter(dyn.x[:,0], dyn.x[:,1])
+    scatter_plot = ax.scatter(dyn.x[:,0], dyn.x[:,1],
+                              edgecolor='k',
+                              linewidths=1.)
 
-    #def draw_circle_scatter(...)
-
-
-    def plot_update(frame):
-        global scatter_plot
+    def update_scatter(frame,
+                       scatter_plot: matplotlib.collections.PathCollection = None,
+                       dyn: HardSphereDynamics = None):
         dyn.time_step()
         scatter_plot.set_offsets(list(zip(dyn.x[:,0], dyn.x[:,1])))
 
-    animation = FuncAnimation(fig, plot_update, frames = None)
+    animation = FuncAnimation(fig=fig,
+                              func=partial(update_scatter, scatter_plot=scatter_plot, dyn=dyn),
+                              frames=None)
     pyplot.show()
-
-    # when stopped show the number of collisions with time
 
     collision_times = np.array([c[-1] for c in dyn.collisions])
     collision_counts = np.arange(len(collision_times)) + 1
@@ -271,7 +274,6 @@ if __name__ == '__main__':
     nodes, edges = make_collision_graph(dyn.collisions)
 
     dot_content = generate_dot_file(edges)
-    print(dot_content)
 
     with open(output_dot_file, 'w') as dot_file:
         dot_file.write(dot_content)
