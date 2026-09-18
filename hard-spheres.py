@@ -7,6 +7,7 @@ __version__ = "1.0"
 import argparse
 from functools import partial
 import subprocess
+import time
 
 import numpy as np
 import matplotlib
@@ -276,6 +277,7 @@ if __name__ == '__main__':
                        dyn: HardSphereDynamics = None):
         dyn.time_step()
         scatter_plot.set_offsets(list(zip(dyn.x[:,0], dyn.x[:,1])))
+        time.sleep(0.02)
 
     animation = FuncAnimation(fig=fig,
                               func=partial(update_scatter, scatter_plot=scatter_plot, dyn=dyn),
