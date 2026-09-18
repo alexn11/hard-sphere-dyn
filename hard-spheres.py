@@ -90,7 +90,7 @@ class HardSphereDynamics:
     def prepare_step(self):
         self.dt = self.base_dt
         if(self.box_size > 0.):
-            self.x = np.fmod(self.x, self.box_size)
+            self.x = np.mod(self.x, self.box_size)
     def find_next_collision(self):
         if(self.collision_finder is None):
             self.collision_finder = CollisionFinder(x=self.x, v=self.v, t=self.dt, d2=self.d2)
