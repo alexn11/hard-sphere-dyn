@@ -23,7 +23,7 @@ Then it runs a simulation with a collision-adapted time step:
   - when two spheres get close to each other, they elastically collide and their velocities are changed to the rule given (1.2) p.4 of the article;
   - the length of the time step is reduced to the interval to the next collision time when a collision is expected to occur before the next time step.
 
-The positions of the spheres are shown in a plot which is refreshed at each time step (but not in real time).
+The positions of the spheres are shown in a plot which is refreshed at each time step (but not in linear time).
 
 When the user closes the plot window, the simulation stops and a plot of the evolution of the total number of collisions with respect to time appears.
 
