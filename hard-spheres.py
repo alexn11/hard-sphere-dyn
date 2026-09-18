@@ -186,7 +186,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('--m', type=float, default=32., help='molar mass (g/mol)')
     arg_parser.add_argument('--sphere_r', type=float, default=1.0, help='sphere radius (abitrary unit)')
     arg_parser.add_argument('--n', type=int, default=40, help='number of spheres')
-    arg_parser.add_argument('--box-size', type=float, default=2.0, help='size of the box (abitrary unit)')
+    arg_parser.add_argument('--box-size', type=float, default=2.0, help='size of the box (abitrary unit) - 0 means no bounding box')
     arg_parser.add_argument('--base-dt', type=float, default=0.1, help='time step size when no collision occur (abitrary unit)')
     arg_parser.add_argument('--dot-file', type=str, default='sample.dot', help='file path to save the collision graph data')
     arg_parser.add_argument('--svg-file', type=str, default='sample.svg', help='file path to save a picture of the collision graph')
