@@ -27,7 +27,7 @@ class Maxwellian2D:
     def compute_std(self):
         self.sigma = (self.m / (k_Boltzmann * self.T))**0.5
     def sample(self, n):
-        return self.rng.normal(0, scale=self.sigma, size=[n, 2])
+        return self.rng.normal(loc=0., scale=self.sigma, size=[n, 2])
 
 class CollisionFinder:
     def __init__(self, x: np.ndarray, v: np.ndarray, t: float, d2: float):
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--T', type=float, default=300., help='temperature (K)')
     arg_parser.add_argument('--m', type=float, default=32., help='molar mass (g/mol)')
-    arg_parser.add_argument('--sphere_r', type=float, default=1.0, help='sphere radius (abitrary unit)')
+    arg_parser.add_argument('--sphere-r', type=float, default=1.0, help='sphere radius (abitrary unit)')
     arg_parser.add_argument('--n', type=int, default=40, help='number of spheres')
     arg_parser.add_argument('--box-size', type=float, default=2.0, help='size of the box (abitrary unit) - 0 means no bounding box')
     arg_parser.add_argument('--base-dt', type=float, default=0.1, help='time step size when no collision occur (abitrary unit)')
