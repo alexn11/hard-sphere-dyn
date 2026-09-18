@@ -1,2 +1,4 @@
 *.dot
 *.svg
+/ignored
+__pycache__
