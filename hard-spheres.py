@@ -246,52 +246,18 @@ if __name__ == '__main__':
     fig, ax = pyplot.subplots()
     ax.set_xlim(left=0., right=box_size)
     ax.set_ylim(bottom=0., top=box_size)
-    circles = []
+    scatter_plot = ax.scatter(dyn.x[:,0], dyn.x[:,1],
+                              edgecolor='k',
+                              linewidths=1.)
 
-    def draw_circle_scatter(ax: pyplot.Axes, circles: list[matplotlib.patches.Circle], centers: np.ndarray):
-        if(circles != []):
-            for circle in circles:
-                circle.remove()
-            circles.clear()
-        circles += [
-            pyplot.Circle(centers[i], radius=sphere_r, facecolor='red', edgecolor='k', lw=1.)
-            for i in range(len(centers))
-        ]
-        for circle in circles:
-            ax.add_patch(circle)
-        return 
-        if(len(circles) == 0):
-            circle_objects = [
-                pyplot.Circle(centers[i], radius=sphere_r, facecolor='red', edgecolor='k', lw=1.)
-                for i in range(len(centers))
-            ]
-            circles = [ ax.add_patch(circle) for circle in circle_objects ]
-        else:
-            for i, circle in enumerate(circles):
-                circle.set_center(centers[i])
-            #for patch in ax.patches:
-            #    ax.patches.
-            for circle in circles:
-                ax.add_patch(circle)
-
-
-    def plot_update(frame, ax: pyplot.Axes = None, circles: list[pyplot.Circle] = None, x: np.ndarray = None):
-        global fig
+    def update_scatter(frame,
+                       scatter_plot: matplotlib.collections.PathCollection = None,
+                       dyn: HardSphereDynamics = None):
         dyn.time_step()
-        draw_circle_scatter(ax, circles, x)
-        #ax.draw(fig.canvas.renderer)
-        fig.canvas.flush_events()
-        fig.canvas.draw()
-        fig.canvas.flush_events()
-        #draw_circle_scatter(ax, [], x)
-
-    def plot_update_scatter(frame, x: np.ndarray = None):
-        global scatter_plot
-        dyn.time_step()
-        scatter_plot.set_offsets(list(zip(x[:,0], x[:,1])))
+        scatter_plot.set_offsets(list(zip(dyn.x[:,0], dyn.x[:,1])))
 
     animation = FuncAnimation(fig=fig,
-                              func=partial(plot_update, ax=ax, circles=circles, x=dyn.x),
+                              func=partial(update_scatter, scatter_plot=scatter_plot, dyn=dyn),
                               frames=None)
     pyplot.show()
 
