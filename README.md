@@ -32,7 +32,7 @@ This file is then processed using the `dot` program which will produce a `SVG` i
 
 The spheres evolve in a square 2-torus.
 
-Parameters of the simulation and the paths of the output files are modifiable on the command line, for more details run:
+The parameters of the simulation and the paths of the output files are modifiable on the command line, for more details run:
 ```bash
 python hard-spheres.py  --help
 ```
