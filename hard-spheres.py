@@ -184,7 +184,7 @@ def compute_marker_size(fig: pyplot.Figure, ax: pyplot.Axes, marker_real_size: f
     print(f'b={b[:2,:2]}')
     pixels_per_unit_x = b[0,0]
     pixels_per_unit_y = b[1,1]
-    marker_size = 13.5 * (fig.dpi**2) * (marker_real_size**2) / (pixels_per_unit_x * pixels_per_unit_y)
+    marker_size = 17.361 * (fig.dpi**2) * (marker_real_size**2) / (pixels_per_unit_x * pixels_per_unit_y)
     print(f's={marker_size}')
     return marker_size
 
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--T', type=float, default=300., help='temperature (K)')
     arg_parser.add_argument('--m', type=float, default=32., help='molar mass (g/mol)')
-    arg_parser.add_argument('--sphere-r', type=float, default=.2, help='sphere radius (abitrary unit)')
+    arg_parser.add_argument('--sphere-r', type=float, default=.1, help='sphere radius (abitrary unit)')
     arg_parser.add_argument('--n', type=int, default=40, help='number of spheres')
     arg_parser.add_argument('--box-size', type=float, default=20.0, help='size of the box (abitrary unit) - 0 means no bounding box')
     arg_parser.add_argument('--base-dt', type=float, default=0.1, help='time step size when no collision occur (abitrary unit)')
@@ -249,7 +249,7 @@ if __name__ == '__main__':
     x0 = box_size * rng.random(size=[n, 2])
     z0 = np.stack([x0, v0], axis=2)
 
-    dyn = HardSphereDynamics(sphere_r=1, base_dt=0.1, z0=z0, box_size=box_size)
+    dyn = HardSphereDynamics(sphere_r=sphere_r, base_dt=0.1, z0=z0, box_size=box_size)
 
     fig, ax = pyplot.subplots(dpi=300)
     ticks = np.arange(start=0, stop=box_size, step=1.)
