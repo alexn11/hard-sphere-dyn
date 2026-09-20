@@ -33,8 +33,9 @@ class Maxwellian2D:
         return self.rng.normal(loc=0., scale=self.sigma, size=[n, 2])
 
 class CollisionFinder:
-    def __init__(self, x: np.ndarray, v: np.ndarray, t: float, d2: float):
+    def __init__(self, x: np.ndarray, v: np.ndarray, t: float, d2: float, eps: float = 0.):
         self.d2 = d2
+        self.eps = eps
         self.update(x, v, t)
     def update(self, x: np.ndarray, v: np.ndarray, t: float):
         self.x = x
@@ -53,6 +54,9 @@ class CollisionFinder:
         self.dxdv = np.sum(self.dx*self.dv, axis=-1)
         reduced_discriminants = self.dxdv**2 - self.dv2 * (self.dx2 - self.d2)
         self.filter_discr = reduced_discriminants >= 0.
+        #print(f'eps: {self.eps} -- dv2: {self.dv2.min()} -- {self.dv2.max()}')
+        #print(f'dv2: {self.dv2.size}')
+        #print(f'dv2+eps: {(self.dv2+self.eps).size}')
         self.collision_times = np.where(self.filter_discr,
                                    (- self.dxdv - reduced_discriminants**0.5) / self.dv2,
                                    self.invalid_collision_time)
@@ -68,7 +72,7 @@ class CollisionFinder:
         return (i_1st_collision, j_1st_collision), t_1st_collision
 
 class HardSphereDynamics:
-    def __init__(self, sphere_r, base_dt, z0, box_size=0.):
+    def __init__(self, sphere_r, base_dt, z0, box_size=0., eps=0.):
         self.r = sphere_r
         self.d = 2. * self.r
         self.d2 = self.d**2
@@ -77,6 +81,7 @@ class HardSphereDynamics:
         self.v0: np.ndarray = z0[:,:,1]
         self.box_size = box_size
         self.prepare_simulation()
+        self.eps = eps
         self.collision_finder = None
         self.collisions = []
     def prepare_simulation(self):
@@ -94,7 +99,7 @@ class HardSphereDynamics:
             self.x = np.mod(self.x, self.box_size)
     def find_next_collision(self):
         if(self.collision_finder is None):
-            self.collision_finder = CollisionFinder(x=self.x, v=self.v, t=self.dt, d2=self.d2)
+            self.collision_finder = CollisionFinder(x=self.x, v=self.v, t=self.dt, d2=self.d2, eps=self.eps)
         else:
             self.collision_finder.update(self.x, self.v, self.dt)
         next_collision = self.collision_finder.get_next_collision()
@@ -106,7 +111,8 @@ class HardSphereDynamics:
         return coll_idxs
     def apply_collision(self, collision_idx):
         i, j = collision_idx
-        collision_dir = self.collision_finder.dx[i, j] / self.d
+        collision_dx = self.collision_finder.dx[i, j] + self.dt * self.collision_finder.dv[i, j]
+        collision_dir = collision_dx / self.d
         momentum_exchange = np.dot(self.collision_finder.dv[i, j], collision_dir) * collision_dir
         self.v[i] += - momentum_exchange
         self.v[j] += momentum_exchange
@@ -182,11 +188,9 @@ def generate_dot_file(edges: list[tuple[str, str]], oriented=False):
 
 def compute_marker_size(fig: pyplot.Figure, ax: pyplot.Axes, marker_real_size: float):
     b = ax.transData._b.get_matrix()
-    print(f'b={b[:2,:2]}')
     pixels_per_unit_x = b[0,0]
     pixels_per_unit_y = b[1,1]
     marker_size = 17.361 * (fig.dpi**2) * (marker_real_size**2) / (pixels_per_unit_x * pixels_per_unit_y)
-    print(f's={marker_size}')
     return marker_size
 
 
@@ -201,6 +205,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('--base-dt', type=float, default=0.1, help='time step size when no collision occur (abitrary unit)')
     arg_parser.add_argument('--dot-file', type=str, default='sample.dot', help='file path to save the collision graph data')
     arg_parser.add_argument('--svg-file', type=str, default='sample.svg', help='file path to save a picture of the collision graph')
+    #arg_parser.add_argument('--eps', type=float, default=0., help='unused')
     arg_parser.add_argument('--test', action='store_true', help='run tests')
     parsed_args = arg_parser.parse_args()
 
@@ -213,6 +218,7 @@ if __name__ == '__main__':
     output_dot_file: str = parsed_args.dot_file
     output_svg_file: str = parsed_args.svg_file
     do_tests: bool = parsed_args.test
+    eps: float = 0. # parsed_args.eps
 
     # tests
     if(do_tests):
@@ -250,7 +256,7 @@ if __name__ == '__main__':
     x0 = box_size * rng.random(size=[n, 2])
     z0 = np.stack([x0, v0], axis=2)
 
-    dyn = HardSphereDynamics(sphere_r=sphere_r, base_dt=0.1, z0=z0, box_size=box_size)
+    dyn = HardSphereDynamics(sphere_r=sphere_r, base_dt=0.1, z0=z0, box_size=box_size, eps=eps)
 
     fig, ax = pyplot.subplots(dpi=300)
     ticks = np.arange(start=0, stop=box_size, step=1.)
