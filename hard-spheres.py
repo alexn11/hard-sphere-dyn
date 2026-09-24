@@ -28,7 +28,7 @@ class Maxwellian2D:
             self.rng = np.random.default_rng()
         self.compute_std()
     def compute_std(self):
-        self.sigma = (self.m / (k_Boltzmann * self.T))**0.5
+        self.sigma = ((k_Boltzmann * self.T) / self.m)**0.5
     def sample(self, n):
         return self.rng.normal(loc=0., scale=self.sigma, size=[n, 2])
 
@@ -54,9 +54,6 @@ class CollisionFinder:
         self.dxdv = np.sum(self.dx*self.dv, axis=-1)
         reduced_discriminants = self.dxdv**2 - self.dv2 * (self.dx2 - self.d2)
         self.filter_discr = reduced_discriminants >= 0.
-        #print(f'eps: {self.eps} -- dv2: {self.dv2.min()} -- {self.dv2.max()}')
-        #print(f'dv2: {self.dv2.size}')
-        #print(f'dv2+eps: {(self.dv2+self.eps).size}')
         self.collision_times = np.where(self.filter_discr,
                                    (- self.dxdv - reduced_discriminants**0.5) / self.dv2,
                                    self.invalid_collision_time)
@@ -199,10 +196,10 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--T', type=float, default=300., help='temperature (K)')
     arg_parser.add_argument('--m', type=float, default=32., help='molar mass (g/mol)')
-    arg_parser.add_argument('--sphere-r', type=float, default=.1, help='sphere radius (abitrary unit)')
+    arg_parser.add_argument('--sphere-r', type=float, default=1e-1, help='sphere radius (arbitrary units)')
     arg_parser.add_argument('--n', type=int, default=40, help='number of spheres')
-    arg_parser.add_argument('--box-size', type=float, default=20.0, help='size of the box (abitrary unit) - 0 means no bounding box')
-    arg_parser.add_argument('--base-dt', type=float, default=0.1, help='time step size when no collision occur (abitrary unit)')
+    arg_parser.add_argument('--box-size', type=float, default=20., help='size of the box (arbitrary units) - 0 means no bounding box')
+    arg_parser.add_argument('--base-dt', type=float, default=0.001, help='time step size when no collision occur (arbitrary units)')
     arg_parser.add_argument('--dot-file', type=str, default='sample.dot', help='file path to save the collision graph data')
     arg_parser.add_argument('--svg-file', type=str, default='sample.svg', help='file path to save a picture of the collision graph')
     #arg_parser.add_argument('--eps', type=float, default=0., help='unused')
@@ -252,11 +249,11 @@ if __name__ == '__main__':
 
     # simulate hard sphere dynamics & display on a plot as it runs
 
-    v0 = Maxwellian2D(k_Boltzmann, 1).sample(n)
+    v0 = Maxwellian2D(m, T).sample(n)
     x0 = box_size * rng.random(size=[n, 2])
     z0 = np.stack([x0, v0], axis=2)
 
-    dyn = HardSphereDynamics(sphere_r=sphere_r, base_dt=0.1, z0=z0, box_size=box_size, eps=eps)
+    dyn = HardSphereDynamics(sphere_r=sphere_r, base_dt=base_dt, z0=z0, box_size=box_size, eps=eps)
 
     fig, ax = pyplot.subplots(dpi=300)
     ticks = np.arange(start=0, stop=box_size, step=1.)
@@ -267,16 +264,17 @@ if __name__ == '__main__':
     scatter_plot = ax.scatter(dyn.x[:,0], dyn.x[:,1],
                               edgecolor='k',
                               linewidths=1.)
-    marker_size = compute_marker_size(fig, ax, sphere_r)
-    ax.clear()
-    ax.set_xlim(left=0., right=box_size)
-    ax.set_ylim(bottom=0., top=box_size)
-    ax.set_xticks(ticks)
-    ax.set_yticks(ticks)
-    scatter_plot = ax.scatter(dyn.x[:,0], dyn.x[:,1],
-                              edgecolor='k',
-                              linewidths=1.,
-                              s=marker_size)
+    if(True):
+        marker_size = compute_marker_size(fig, ax, sphere_r)
+        ax.clear()
+        ax.set_xlim(left=0., right=box_size)
+        ax.set_ylim(bottom=0., top=box_size)
+        ax.set_xticks(ticks)
+        ax.set_yticks(ticks)
+        scatter_plot = ax.scatter(dyn.x[:,0], dyn.x[:,1],
+                                edgecolor='k',
+                                linewidths=1.,
+                                s=marker_size)
 
     def update_scatter(frame,
                        scatter_plot: matplotlib.collections.PathCollection = None,
